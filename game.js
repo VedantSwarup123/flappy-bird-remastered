@@ -122,7 +122,9 @@ const bird = {
     velocity: 0,
     gravity: 0.5,
     jump: -9,
-    rotation: 0
+    rotation: 0,
+    wingAngle: 0,
+    wingSpeed: 0
 };
 
 // Pipes array
@@ -191,6 +193,8 @@ function startGame() {
     score = 0;
     bird.y = 250;
     bird.velocity = 0;
+    bird.wingAngle = 0;
+    bird.wingSpeed = 0;
     pipes = [];
     particles = [];
     bloodSplatters = [];
@@ -212,6 +216,7 @@ function startGame() {
 // Flap function
 function flap() {
     bird.velocity = bird.jump;
+    bird.wingSpeed = -0.8; // Start wing flap animation
     createParticles(bird.x, bird.y + bird.height / 2, '#FFD700');
     playSound('flap');
 }
@@ -369,6 +374,16 @@ function update() {
     bird.velocity += bird.gravity;
     bird.y += bird.velocity;
     bird.rotation = Math.min(Math.max(bird.velocity * 3, -30), 90);
+
+    // Update wing flapping animation
+    bird.wingAngle += bird.wingSpeed;
+    bird.wingSpeed += 0.05; // Gravity effect on wing
+
+    // Clamp wing angle
+    if (bird.wingAngle > 0.5) {
+        bird.wingAngle = 0.5;
+        bird.wingSpeed = 0;
+    }
 
     // Update pipes
     for (let i = pipes.length - 1; i >= 0; i--) {
@@ -569,11 +584,18 @@ function drawBird() {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Wing
+    // Wing - animated based on wingAngle
+    ctx.save();
+    ctx.translate(-3, 2);
+    ctx.rotate(bird.wingAngle);
     ctx.fillStyle = '#FF9800';
     ctx.beginPath();
-    ctx.ellipse(-3, 2, bird.width / 3, bird.height / 3, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, bird.width / 3, bird.height / 3, -0.3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#F57C00';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
 
     // Bird eye white
     ctx.fillStyle = '#fff';
