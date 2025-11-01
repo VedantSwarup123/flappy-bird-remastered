@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - A Fun Adventure!</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="startScreen" class="screen">
+            <h1 class="game-title">🐦 Flappy Bird 🐦</h1>
+            <p class="instructions">Click or Press SPACE to Flap!</p>
+            <button id="startButton" class="game-button">Start Game</button>
+            <div class="high-score">High Score: <span id="highScoreDisplay">0</span></div>
+            <p class="music-note" style="margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.6);">
+                🎵 Music: Vyra - Disco Metropolis
+            </p>
+        </div>
+        
+        <div id="gameOverScreen" class="screen hidden">
+            <h2 class="game-over-title">Game Over!</h2>
+            <div class="score-container">
+                <p class="final-score">Score: <span id="finalScore">0</span></p>
+                <p class="high-score-game-over">Best: <span id="bestScore">0</span></p>
+            </div>
+            <button id="restartButton" class="game-button">Play Again</button>
+        </div>
+        
+        <div id="scoreDisplay" class="score-display hidden">0</div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
+
