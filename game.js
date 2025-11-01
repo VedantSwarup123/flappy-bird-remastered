@@ -86,8 +86,8 @@ function initBackgroundMusic() {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.3;
 
-    // Set your music file path
-    backgroundMusic.src = 'sounds/Vyra - Disco Metropolis (1).mp3';
+    // Use compressed version for faster loading (2.9MB vs 8.7MB)
+    backgroundMusic.src = 'sounds/disco-metropolis-small.m4a';
 
     // Handle loading errors
     backgroundMusic.addEventListener('error', () => {
