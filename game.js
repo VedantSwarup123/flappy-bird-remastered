@@ -411,39 +411,67 @@ function gameOver() {
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
 
+    const speedLevel = Math.min((currentSpeed - basePipeSpeed) / 10, 1);
+
+    if (gameState === 'playing' && speedLevel > 0) {
+        const shakeIntensity = speedLevel * 3;
+        const shakeX = (Math.random() - 0.5) * shakeIntensity;
+        const shakeY = (Math.random() - 0.5) * shakeIntensity;
+        ctx.translate(shakeX, shakeY);
+    }
+
+    ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+
+    const speedLevel2 = Math.min((currentSpeed - basePipeSpeed) / 10, 1);
     const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    skyGradient.addColorStop(0, '#4A90E2');
-    skyGradient.addColorStop(0.5, '#87CEEB');
-    skyGradient.addColorStop(0.8, '#B4E7FF');
-    skyGradient.addColorStop(1, '#D4F1F4');
+
+    const topColor1 = interpolateColor('#4A90E2', '#8B0000', speedLevel2);
+    const topColor2 = interpolateColor('#87CEEB', '#DC143C', speedLevel2);
+    const bottomColor1 = interpolateColor('#B4E7FF', '#FF6B6B', speedLevel2);
+    const bottomColor2 = interpolateColor('#D4F1F4', '#FFB6B6', speedLevel2);
+
+    skyGradient.addColorStop(0, topColor1);
+    skyGradient.addColorStop(0.5, topColor2);
+    skyGradient.addColorStop(0.8, bottomColor1);
+    skyGradient.addColorStop(1, bottomColor2);
     ctx.fillStyle = skyGradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(-10, -10, canvas.width + 20, canvas.height + 20);
 
-    
     drawSun();
-
-    
     drawClouds();
-
-    
     drawPipes();
-
-    
     drawGround();
 
-    
     if (gameState === 'playing') {
         drawBird();
     }
 
-    
     drawBloodSplatters();
     drawFeathers();
-
-    
     drawParticles();
+
+    ctx.restore();
+}
+
+function interpolateColor(color1, color2, factor) {
+    const c1 = parseInt(color1.slice(1), 16);
+    const c2 = parseInt(color2.slice(1), 16);
+
+    const r1 = (c1 >> 16) & 0xff;
+    const g1 = (c1 >> 8) & 0xff;
+    const b1 = c1 & 0xff;
+
+    const r2 = (c2 >> 16) & 0xff;
+    const g2 = (c2 >> 8) & 0xff;
+    const b2 = c2 & 0xff;
+
+    const r = Math.round(r1 + (r2 - r1) * factor);
+    const g = Math.round(g1 + (g2 - g1) * factor);
+    const b = Math.round(b1 + (b2 - b1) * factor);
+
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
 function drawSun() {
