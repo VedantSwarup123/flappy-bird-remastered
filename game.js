@@ -11,6 +11,10 @@ let score = 0;
 let highScore = localStorage.getItem('flappyBirdHighScore') || 0;
 document.getElementById('highScoreDisplay').textContent = highScore;
 
+let lastTime = 0;
+const targetFPS = 60;
+const targetFrameTime = 1000 / targetFPS;
+
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 function playSound(type) {
@@ -146,8 +150,27 @@ for (let i = 0; i < canvas.width; i += 50) {
     });
 }
 
-document.getElementById('startButton').addEventListener('click', startGame);
-document.getElementById('restartButton').addEventListener('click', startGame);
+function flapHandler(e) {
+    e.preventDefault();
+    if (gameState === 'playing') {
+        flap();
+    }
+}
+
+function startGameHandler(e) {
+    e.preventDefault();
+    startGame();
+}
+
+const startButton = document.getElementById('startButton');
+startButton.addEventListener('touchstart', startGameHandler, { passive: false });
+startButton.addEventListener('pointerdown', startGameHandler);
+startButton.addEventListener('mousedown', startGameHandler);
+
+const restartButton = document.getElementById('restartButton');
+restartButton.addEventListener('touchstart', startGameHandler, { passive: false });
+restartButton.addEventListener('pointerdown', startGameHandler);
+restartButton.addEventListener('mousedown', startGameHandler);
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && gameState === 'playing') {
@@ -159,11 +182,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-canvas.addEventListener('click', () => {
-    if (gameState === 'playing') {
-        flap();
-    }
-});
+canvas.addEventListener('touchstart', flapHandler, { passive: false });
+canvas.addEventListener('pointerdown', flapHandler);
+canvas.addEventListener('mousedown', flapHandler);
 
 function startGame() {
     gameState = 'playing';
@@ -285,16 +306,16 @@ function createBloodyExplosion(x, y) {
     }
 }
 
-function update() {
+function update(deltaMultiplier = 1) {
     for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].x += particles[i].vx;
-        particles[i].y += particles[i].vy;
+        particles[i].x += particles[i].vx * deltaMultiplier;
+        particles[i].y += particles[i].vy * deltaMultiplier;
 
         if (particles[i].hasGravity) {
-            particles[i].vy += particles[i].gravity;
+            particles[i].vy += particles[i].gravity * deltaMultiplier;
         }
 
-        particles[i].life--;
+        particles[i].life -= deltaMultiplier;
 
         if (particles[i].life <= 0) {
             particles.splice(i, 1);
@@ -302,11 +323,11 @@ function update() {
     }
 
     for (let i = bloodSplatters.length - 1; i >= 0; i--) {
-        bloodSplatters[i].x += bloodSplatters[i].vx;
-        bloodSplatters[i].y += bloodSplatters[i].vy;
-        bloodSplatters[i].vy += bloodSplatters[i].gravity;
-        bloodSplatters[i].rotation += bloodSplatters[i].rotationSpeed;
-        bloodSplatters[i].life--;
+        bloodSplatters[i].x += bloodSplatters[i].vx * deltaMultiplier;
+        bloodSplatters[i].y += bloodSplatters[i].vy * deltaMultiplier;
+        bloodSplatters[i].vy += bloodSplatters[i].gravity * deltaMultiplier;
+        bloodSplatters[i].rotation += bloodSplatters[i].rotationSpeed * deltaMultiplier;
+        bloodSplatters[i].life -= deltaMultiplier;
 
         if (bloodSplatters[i].life <= 0) {
             bloodSplatters.splice(i, 1);
@@ -314,12 +335,12 @@ function update() {
     }
 
     for (let i = feathers.length - 1; i >= 0; i--) {
-        feathers[i].x += feathers[i].vx;
-        feathers[i].y += feathers[i].vy;
-        feathers[i].vy += feathers[i].gravity;
-        feathers[i].vx *= 0.98;
-        feathers[i].rotation += feathers[i].rotationSpeed;
-        feathers[i].life--;
+        feathers[i].x += feathers[i].vx * deltaMultiplier;
+        feathers[i].y += feathers[i].vy * deltaMultiplier;
+        feathers[i].vy += feathers[i].gravity * deltaMultiplier;
+        feathers[i].vx *= Math.pow(0.98, deltaMultiplier);
+        feathers[i].rotation += feathers[i].rotationSpeed * deltaMultiplier;
+        feathers[i].life -= deltaMultiplier;
 
         if (feathers[i].life <= 0) {
             feathers.splice(i, 1);
@@ -328,12 +349,12 @@ function update() {
 
     if (gameState !== 'playing') return;
 
-    bird.velocity += bird.gravity;
-    bird.y += bird.velocity;
+    bird.velocity += bird.gravity * deltaMultiplier;
+    bird.y += bird.velocity * deltaMultiplier;
     bird.rotation = Math.min(Math.max(bird.velocity * 3, -30), 90);
 
-    bird.wingAngle += bird.wingSpeed;
-    bird.wingSpeed += 0.05;
+    bird.wingAngle += bird.wingSpeed * deltaMultiplier;
+    bird.wingSpeed += 0.05 * deltaMultiplier;
 
     if (bird.wingAngle > 0.5) {
         bird.wingAngle = 0.5;
@@ -341,7 +362,7 @@ function update() {
     }
 
     for (let i = pipes.length - 1; i >= 0; i--) {
-        pipes[i].x -= currentSpeed;
+        pipes[i].x -= currentSpeed * deltaMultiplier;
 
         if (!pipes[i].scored && pipes[i].x + pipeWidth < bird.x) {
             pipes[i].scored = true;
@@ -363,7 +384,7 @@ function update() {
     }
 
     clouds.forEach(cloud => {
-        cloud.x -= cloud.speed * (currentSpeed / basePipeSpeed);
+        cloud.x -= cloud.speed * (currentSpeed / basePipeSpeed) * deltaMultiplier;
         if (cloud.x + cloud.width < 0) {
             cloud.x = canvas.width;
             cloud.y = Math.random() * 200;
@@ -753,10 +774,18 @@ function drawParticles() {
     ctx.globalAlpha = 1;
 }
 
-function gameLoop() {
-    update();
-    draw();
+function gameLoop(currentTime) {
+    if (!lastTime) lastTime = currentTime;
+    const deltaTime = currentTime - lastTime;
+
+    if (deltaTime >= targetFrameTime) {
+        const deltaMultiplier = deltaTime / targetFrameTime;
+        update(deltaMultiplier);
+        draw();
+        lastTime = currentTime - (deltaTime % targetFrameTime);
+    }
+
     requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+gameLoop(0);
