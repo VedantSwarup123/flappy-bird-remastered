@@ -150,8 +150,27 @@ for (let i = 0; i < canvas.width; i += 50) {
     });
 }
 
-document.getElementById('startButton').addEventListener('click', startGame);
-document.getElementById('restartButton').addEventListener('click', startGame);
+function flapHandler(e) {
+    e.preventDefault();
+    if (gameState === 'playing') {
+        flap();
+    }
+}
+
+function startGameHandler(e) {
+    e.preventDefault();
+    startGame();
+}
+
+const startButton = document.getElementById('startButton');
+startButton.addEventListener('touchstart', startGameHandler, { passive: false });
+startButton.addEventListener('pointerdown', startGameHandler);
+startButton.addEventListener('mousedown', startGameHandler);
+
+const restartButton = document.getElementById('restartButton');
+restartButton.addEventListener('touchstart', startGameHandler, { passive: false });
+restartButton.addEventListener('pointerdown', startGameHandler);
+restartButton.addEventListener('mousedown', startGameHandler);
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && gameState === 'playing') {
@@ -163,11 +182,9 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-canvas.addEventListener('click', () => {
-    if (gameState === 'playing') {
-        flap();
-    }
-});
+canvas.addEventListener('touchstart', flapHandler, { passive: false });
+canvas.addEventListener('pointerdown', flapHandler);
+canvas.addEventListener('mousedown', flapHandler);
 
 function startGame() {
     gameState = 'playing';
